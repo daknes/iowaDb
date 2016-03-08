@@ -35,8 +35,9 @@ function getMongoclient(){
 function getTopten(){
     console.log("get top ten");   
     db.collection("alcoholdb").aggregate([
+        {$match:{"CATEGORY NAME": "TEQUILA"}},
         {$group:{_id:"$COUNTY",
-         tota:{$sum:"$TOTAL"},
+         tota:{$sum:"$TOTAL"}}},
          //count:{$sum:1}}},
          {$sort:{tota:-1}},
          {$limit:10}
