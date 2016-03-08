@@ -20,7 +20,7 @@ function createWindow () {
     }});
 
 mainWindow.openDevTools({detach:true});
-    mainWindow.loadURL('file://' + __dirname + '/index3.html');
+    mainWindow.loadURL('file://' + __dirname + '/index4.html');
     //myswag();
       // Emitted when the window is closed.
   mainWindow.on('closed', function() {

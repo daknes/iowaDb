@@ -1,11 +1,11 @@
 <!doctype html>
 <html>
-<header>
+<head>
     <script>
         window.$ = window.jQuery = require('./scripts/jquery-1.12.1.js');
     </script>
     <script src="Chart.js-master/Chart.js-master/Chart.js"></script>
-</header>
+</head>
 
 <body>
 <canvas id="myChart" width="1200" height="800"></canvas>
@@ -32,11 +32,14 @@ function getMongoclient(){
     }); 
 }
 
+
+
 function getTopten(){
     console.log("get top ten");   
     db.collection("alcoholdb").aggregate([
+        {$match:{"CATEGORY NAME":"TEQUILA"}},
         {$group:{_id:"$COUNTY",
-         tota:{$sum:"$TOTAL"},
+         tota:{$sum:"$TOTAL"}}},
          //count:{$sum:1}}},
          {$sort:{tota:-1}},
          {$limit:10}
