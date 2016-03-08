@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<header>
+    <script>
+        window.$ = window.jQuery = require('./scripts/jquery-1.12.1.js');
+    </script>
+    <script src="Chart.js-master/Chart.js-master/Chart.js"></script>
+</header>
+
+<body>
+<canvas id="myChart" width="1200" height="800"></canvas>
+</body>
+<script>
+    // db.alcoholdb.aggregate([{$match:{"ZIPCODE":50401}},{$group:{_id:"$NAME"}}])
+    //db.alcoholdb.aggregate([{$group:{_id:"$COUNTY NUMBER", tota:{$sum:"$TOTAL"}}},{$sort:{tota:-1}}])
+    //db.alcoholdb.aggregate([{$group:{_id:"$COUNTY NUMBER", tota:{$sum:"$TOTAL"}, count:{$sum:1}}},{$sort:{tota:-1}}])
+    var db;
+     var names = [];
+    var datase = [];
+    $(function(){
+    console.log("doc ready");
+    getMongoclient();          
+});
+
+function getMongoclient(){
+        var MongoClient = require('mongodb').MongoClient;
+        var url = 'mongodb://localhost:27017/mydb';
+        MongoClient.connect(url, function(err, dbb){
+            console.log("connected");
+        db = dbb;
+        getTopten();
+    }); 
+}
+
+function getTopten(){
+    console.log("get top ten");   
+    db.collection("alcoholdb").aggregate([
+        {$group:{_id:"$COUNTY",
+         tota:{$sum:"$TOTAL"},
+         //count:{$sum:1}}},
+         {$sort:{tota:-1}},
+         {$limit:10}
+         ]).toArray(function(err, result){
+             for(var i = 0; i < result.length; i++){
+                 names.push(result[i]["_id"]);
+                 datase.push(Math.round(result[i]["tota"]))
+             }
+         createGraf();
+         });
+         
+         
+}
+
+function createGraf(){
+    console.log("createGraf");
+    var data = {
+        labels:names,
+        datasets: [
+        {
+            label: "My First dataset",
+            fillColor: "rgba(220,220,220,0.5)",
+            strokeColor: "rgba(220,220,220,0.8)",
+            highlightFill: "rgba(220,220,220,0.75)",
+            highlightStroke: "rgba(220,220,220,1)",
+            data: datase
+        }
+    ]
+    };      
+var ctx = $("#myChart").get(0).getContext("2d");
+    var myBarChart = new Chart(ctx).Bar(data);
+    
+}
+
+
+</script>
+
+</html>

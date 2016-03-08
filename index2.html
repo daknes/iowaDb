@@ -1,0 +1,231 @@
+<!doctype html>
+<html>
+<header>
+    <script>
+        window.$ = window.jQuery = require('./scripts/jquery-1.12.1.js');
+    </script>
+    <script src="Chart.js-master/Chart.js-master/Chart.js"></script>
+    <!--<script>window.$ = window.jQuery = require('./Chart.js-master/Chart.js-master/Chart.js');</script>-->
+</header>
+
+<body>
+    <h3>henter 10 viksomheder med stoerste profit for en katogeri for en periode</h3>
+    <select id="category" onChange="changeCanvas()"></select>
+    <select id="date" onChange="getDay()">
+       <option>January</option> 
+       <option>February</option> 
+       <option>March</option> 
+       <option>April</option> 
+       <option>May</option> 
+       <option>June</option> 
+       <option>July</option> 
+       <option>August</option> 
+       <option>September</option> 
+       <option>October</option> 
+       <option>November</option> 
+       <option>December</option> 
+    </select>
+    <select id="year" onchange="changeYear()">
+        <option>2014</option>
+        <option>2015</option>
+    </select>
+    <canvas id="myChart" width="800" height="400"></canvas>
+
+    <script>
+        var firstDate ="01";
+        var lasteday = "02";
+        var datetoarray=[];
+            var db;
+            var myBarChart ="";
+            var year = "2014";
+            var newyear = "2014"
+
+$(function(){
+    console.log("doc ready");
+    getMongoclient();          
+});
+
+function getMongoclient(){
+        var MongoClient = require('mongodb').MongoClient;
+        var url = 'mongodb://localhost:27017/mydb';
+        MongoClient.connect(url, function(err, dbb){
+            console.log("connected");
+        db = dbb;
+        createdropdown();
+    }); 
+}
+
+
+function createdropdown(){
+    console.log("creaDrop");
+    var selc = document.getElementById("category");
+    db.collection('alcoholdb').distinct("CATEGORY NAME",(function(err, doc){                  
+       for(var i = 0; i < doc.length; i++){
+        var op = document.createElement("option");
+        if(doc[i]!=""){
+            op.text = doc[i];
+            selc.add(op);
+        }
+    }
+    }));    
+}
+
+function changeCanvas(){
+    console.log("cahnge");
+    var selc = document.getElementById("category").value;
+    getTopprofit(selc);
+}
+
+           
+ function getTopprofit(cn){
+     console.log("getTop");
+        db.collection('alcoholdb').aggregate(
+                [
+                    {$match:{"CATEGORY NAME":cn}},
+                    {$match:{"DATE":{"$gte":new Date("2014-"+firstDate+"-01T00:00:00Z")}}},
+                    {$match:{"DATE":{"$lt":new Date("2014-"+lasteday+"-01T00:00:00Z")}}},
+                        {$group:{_id:"$NAME",  profit:{$sum:{$subtract:[{$multiply:["$BOTTLE QTY","$BTL PRICE"]},
+                        {$multiply:["$BOTTLE QTY","$STATE BTL COST"]} ] }},
+                        //info:{"$push":{date:"$DATE"}}                        
+                        }},
+                        {$limit:10},
+                        {$sort:{profit:-1}}
+                ]).toArray(function (err, result){
+                   var arr = [];                    
+                    for(var i =0; i < result.length;i++){
+                        var data = {
+                            value: result[i]["profit"],
+                            color:"#F7464A",
+                            highlight: "#FF5A5E",
+                            label: result[i]["_id"]
+                        };
+                        arr.push(data);
+                        
+                    }
+                    createPol(arr);                    
+                });
+              
+    }       
+k =0;
+function createPol(arr){
+    console.log("createpol");
+    var ctx = document.getElementById("myChart").getContext("2d");
+    if(k >0){
+        console.log(myBarChart);
+        var no = myBarChart["segments"].length;
+        for(var i = 0; i < no; i++){
+            myBarChart.removeData(0);
+        }
+    }
+    k++;    
+    myBarChart = new Chart(ctx).PolarArea(arr);
+}
+ 
+   function consoleStuff(db){
+        db.close();
+      
+    }              
+    
+    function getDay(){
+       getdate();
+       var selc = document.getElementById("category").value;
+       getTopprofit(selc);
+    }     
+                   
+   function getdate(){
+       var datename = document.getElementById("date").value;
+       switch(datename){
+        case "January" : firstDate = "01"; lasteday = "02"; 
+        break;
+        case "February" : firstDate = "02"; lasteday = "03"; 
+        break;
+        case "March" : firstDate = "03"; lasteday = "04"; 
+        break;
+        case "April" : firstDate = "04"; lasteday = "05"; 
+        break;
+        case "May" : firstDate = "05"; lasteday = "06"; 
+        break;
+        case "June" : firstDate = "06"; lasteday = "07"; 
+        break;
+        case "July" : firstDate = "07"; lasteday = "08"; 
+        break;
+        case "August" : firstDate = "08"; lasteday = "09"; 
+        break;
+        case "September" : firstDate = "09"; lasteday = "10"; 
+        break;
+        case "October" : firstDate = "10"; lasteday = "11"; 
+        break;
+        case "November" : firstDate = "11"; lasteday = "12"; 
+        break;
+        case "December" : 
+        firstDate = "12"; 
+        lasteday = "01"; 
+        newyear = "2015"
+        break;
+    }
+   }
+    function changeYear(){
+        year = document.getElementById("year").value;
+    }            
+   
+  
+  
+  
+   
+//   db.alcoholdb.aggregate(
+//                 [
+//                     {$match:{"CATEGORY NAME":"SCOTCH WHISKIES"}},
+//                     {$match:{"DATE":{"$gte":new Date("2014-02-01T00:00:00Z")}}},
+//                     {$match:{"DATE":{"$lt":new Date("2014-03-01T00:00:00Z")}}},
+//                         {$group:{_id:"$NAME",  profit:{$sum:{$subtract:[{$multiply:["$BOTTLE QTY","$BTL PRICE"]},
+//                         {$multiply:["$BOTTLE QTY","$STATE BTL COST"]} ] }},
+//                         info:{"$push":{date:"$DATE"}},
+//                         count:{$sum:1}                        
+//                         }},
+//                         {$limit:10},
+//                         {$sort:{profit:-1}}
+//                 ]).pretty()
+  
+//   db.alcoholdb.aggregate(
+//       [
+//           {$group:{_id:"$COUNTY", tota:{$sum:"$TOTAL"}, 
+//           count:{$sum:1}}},
+//           {$sort:{tota:-1}},
+//           {$limit:10}         
+//           ])
+   
+                
+               // db.alcoholdb.aggregate(
+                // [
+                //     {$match:{"CATEGORY NAME":"TEQUILA"}},
+                //         {$group:{_id:"$NAME",  profit:{$sum:{$subtract:[{$multiply:["$BOTTLE QTY","$BTL PRICE"]},
+                //         {$multiply:["$BOTTLE QTY","$STATE BTL COST"]} ] }},
+                //         info:{"$push":{date:"$DATE"}}                        
+                //         }},
+                //         {$limit:10},
+                //         {$sort:{profit:-1}}
+                // ]).pretty();
+
+    
+     // var i = 0;
+            // db.alcoholdb.find().forEach(function(doc){ 
+            // var totstr = doc["TOTAL"].split("$");
+            // var tot = parseFloat(totstr[1]);
+            // doc["TOTAL"] = tot;
+            // var Btlstr = doc["BTL PRICE"].split("$");
+            // var Btltot = parseFloat(Btlstr[1]);
+            // doc["BTL PRICE"] = Btltot;
+            // var Statestr = doc["STATE BTL COST"].split("$");
+            // var Statetot = parseFloat(Statestr[1]);
+            // doc["STATE BTL COST"] = Statetot;
+            // db.alcoholdb.save(doc);
+            // print(i);
+            // i++;
+            //     });
+            
+    </script>
+</body>
+
+
+
+</html>

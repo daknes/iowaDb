@@ -1,0 +1,173 @@
+    <!doctype html>
+    <html>
+    <head>
+    <link rel="stylesheet" href="scripts/jquery-ui.css">
+    <link rel="stylesheet" href="style.css">
+    <script>window.$ = window.jQuery = require('./scripts/jquery-1.12.1.js');</script>
+    <script src="scripts/jquery-ui.js"></script>
+    </head>
+    <body>
+
+    <div id="datepicker"></div>
+
+
+
+
+<script type="text/javascript">
+
+
+$(document).ready(function () {
+
+var doces = [];       
+var dates =[]; 
+    $('#datepicker').datepicker({
+    dateFormat: "mm/dd/yy",
+    defaultDate:"03/22/2014", 
+    onChangeMonthYear : function(){   
+        setTimeout(function(){
+            year = $(".ui-datepicker-year").text(); 
+            month = $(".ui-datepicker-month").text();
+            opdb();}, 2000);
+    }   
+});
+
+
+
+
+        
+    var year = $(".ui-datepicker-year").text(); 
+    var month = $(".ui-datepicker-month").text();
+    var monthdate = ""; 
+
+function opdb(){
+    var MongoClient = require('mongodb').MongoClient;
+        var assert = require('assert');
+        var url = 'mongodb://localhost:27017/mydb';
+        MongoClient.connect(url, function(err, db){
+        assert.equal(null,err);
+        console.log("connected");
+        //dis(db);
+        getallfields(db);
+    }); 
+}
+
+    var MongoClient = require('mongodb').MongoClient;
+        var assert = require('assert');
+        var url = 'mongodb://localhost:27017/mydb';
+        MongoClient.connect(url, function(err, db){
+        assert.equal(null,err);
+        console.log("connected");
+        //dis(db);
+        getallfields(db);
+    });  
+
+var monthdat = function(datename){
+switch(datename){
+        case "January" : monthdate = "01";
+        break;
+        case "February" : monthdate = "02";
+        break;
+        case "March" : monthdate = "03";
+        break;
+        case "April" : monthdate = "04";
+        break;
+        case "May" : monthdate = "05";
+        break;
+        case "June" : monthdate = "06";
+        break;
+        case "July" : monthdate = "07";
+        break;
+        case "August" : monthdate = "08";
+        break;
+        case "September" : monthdate = "09";
+        break;
+        case "October" : monthdate = "10";
+        break;
+        case "November" : monthdate = "11";
+        break;
+        case "December" : monthdate = "12";
+        break;
+    }
+}
+var no = [];
+function getallfields (db){
+    no = [];
+    monthdat(month);
+    console.log("hej1");
+    var amountofsales = [];
+    var r = db.collection('alcoholdb').aggregate([
+        {$match: {"DATE": {$regex:".*"+year+".*"}}},
+        {$match: {"DATE": {$regex:".*"+monthdate+".*"}}},
+        { $group:{"_id":"$DATE","count":{$sum:1}}}
+    ]).toArray(function(err, result) {
+     assert.equal(err, null);
+     for(var i = 0; i < result.length; i++){
+         console.log(result[i]['_id'] + " " +result[i]['count']);
+         amountofsales.push(result[i]['_id']);
+         no.push(result[i]['count']); 
+     }
+    sort(amountofsales);
+         db.close();     
+   });
+     
+};
+
+
+
+
+
+
+// db.alcohol.find().forEach(function(doc){
+// ... var array = doc.DATE.split("/");
+// ... var month = array[o];
+// ... var date = array[1];
+// ... var year = array[2];
+// ... var day = year+"-"+month+"-"+date;
+// ... doc.DATE = new Date(day);
+// ... print(doc.DATE)
+// });
+
+
+
+
+
+var dis = function(db){    
+    db.collection('alcoholdb').distinct("DATE",(function(err, doc){        
+        doces =doc;
+        sort(doces);   
+       
+    }));
+}
+
+
+    function sort(doc){
+        console.log("sort");
+        dates = [];
+        for(var i = 0; i < doc.length; i++){
+            if(doc[i].indexOf(monthdate) == 0 && doc[i].indexOf(year) > 0){
+                var substr = doc[i].substring(3,5);
+                console.log(substr);                
+                dates.push(substr);
+            }
+        }
+        change(dates);
+    }
+
+    function change(arr){
+        for(var i =0; i < arr.length; i++){
+            for(var x = 0; x <document.getElementsByTagName("a").length; x++ ){
+                var elem = document.getElementsByTagName("a")[x].innerText;
+                if(elem.length ==1)
+                    elem ="0"+elem;
+                if(arr[i] == elem){
+                    console.log("swag");
+                    document.getElementsByTagName("a")[x].parentElement.style.backgroundColor  ="red";
+                    document.getElementsByTagName("a")[x].setAttribute('title',no[i]);
+                }                    
+            }
+        }
+    }
+});
+</script>
+</body>
+</html>
