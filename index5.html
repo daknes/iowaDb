@@ -34,7 +34,24 @@
                 
             };
             
-            //> db.alcoholdb.aggregate([{$group : {_id : {County: "$COUNTY", CategoryName : "$CATEGORY NAME"}, total:{$sum: "$TOTAL"}}},{ $sort : { "_id.County": 1, total: -1} }])
+            db.alcoholdb.aggregate(
+                [
+                    {
+                        $group : {
+                            _id : {
+                                County: "$COUNTY", 
+                                CategoryName : "$CATEGORY NAME"
+                            }, 
+                            total:
+                            {
+                                $sum: "$TOTAL"
+                            }
+                        }
+                    },{
+                        $group: {
+                            _id:{ County: "$_id.County"},
+                            Max: {$max: "$total"}
+                        }}])
             
             function generateStats(){
                 
