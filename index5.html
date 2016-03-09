@@ -9,8 +9,28 @@
     </head>
 
     <body>
+    <ul>
+        <li>
+            <a href="index2.html">Største profit</a>   
+        </li>
+        <li>
+            <a href="index3.html">Tequila salg</a>   
+        </li>
+        <li>
+            <a href="index4.html">Kategorifordeling for butik</a>
+        </li>
+        <li>
+            <a href="index5.html">Mest populære alkohol i regioner</a>
+        </li>
+    </ul>
         <select id="category" onChange="createChar()"></select>
-        <canvas id="myChart" width="800" height="400"></canvas>
+        <table id="result" border="2">
+            <tr>
+                <th>County name</th>
+                <th>Alcohol</th>
+                <th>Bottles sold</th>
+            </tr>
+        </table>
         <div id="legend"></div>
         <script>
             var db;
@@ -30,12 +50,54 @@
                 }); 
             }
             
-            var mapFunction = function(){
-                
-            };
+            // db.alcoholdb.aggregate(
+            //     [
+            //         {
+            //             $group : {
+            //                 _id : {
+            //                     County: "$COUNTY", 
+            //                     CategoryName : "$CATEGORY NAME"
+            //                 }, 
+            //                 total:
+            //                 {
+            //                     $sum: "$BOTTLE QTY"
+            //                 }
+            //             }
+            //         },
+            //         {
+            //             $sort:{"_id.County": 1, "total": -1}
+            //         }
+            //         ,{
+            //             $group: {
+            //                 _id:{ County: "$_id.County"},
+            //                 TotalSold: {$first: "$total"},
+            //                 Alcohol: {$first: "$_id.CategoryName"}
+            //             }
+            //         },
+            //         {
+            //             $sort:{"_id.County": 1}
+            //         }])
             
-            db.alcoholdb.aggregate(
-                [
+            function createPol(err, result){
+                for(var i = 0; i < result.length; i++){
+                    var obj = result[i];
+                    var table = document.getElementById("result");
+                    var row = table.insertRow(-1);
+                    
+                    var countyCell = row.insertCell(0);
+                    var alcoholCell = row.insertCell(1);
+                    var bottlesCell = row.insertCell(2);
+                    
+                    countyCell.innerHTML = obj._id.County;
+                    alcoholCell.innerHTML = obj.Alcohol;
+                    bottlesCell.innerHTML = obj.TotalSold;
+                }
+                console.log(result);
+            }
+            
+            function generateStats(){
+                db.collection('alcoholdb').aggregate(                
+                    [
                     {
                         $group : {
                             _id : {
@@ -44,18 +106,27 @@
                             }, 
                             total:
                             {
-                                $sum: "$TOTAL"
+                                $sum: "$BOTTLE QTY"
                             }
                         }
-                    },{
+                    },
+                    {
+                        $sort:{"_id.County": 1, "total": -1}
+                    }
+                    ,{
                         $group: {
                             _id:{ County: "$_id.County"},
-                            Max: {$max: "$total"}
-                        }}])
-            
-            function generateStats(){
-                
+                            TotalSold: {$first: "$total"},
+                            Alcohol: {$first: "$_id.CategoryName"}
+                        }
+                    },
+                    {
+                        $sort:{"_id.County": 1}
+                    }]).toArray(createPol);
             }
+            
+
+            
         </script>
     </body>
 </html>
