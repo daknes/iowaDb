@@ -1,0 +1,44 @@
+<!doctype>
+<html>
+
+    <head>
+        <script>
+            window.$ = window.jQuery = require('./scripts/jquery-1.12.1.js');
+        </script>
+        <script src="Chart.js-master/Chart.js-master/Chart.js"></script>
+    </head>
+
+    <body>
+        <select id="category" onChange="createChar()"></select>
+        <canvas id="myChart" width="800" height="400"></canvas>
+        <div id="legend"></div>
+        <script>
+            var db;
+            var myBarChart ="";
+            $(function(){
+                console.log("doc ready");
+                getMongoclient();          
+            });
+
+            function getMongoclient(){
+                    var MongoClient = require('mongodb').MongoClient;
+                    var url = 'mongodb://localhost:27017/mydb';
+                    MongoClient.connect(url, function(err, dbb){
+                        console.log("connected");
+                    db = dbb;
+                    generateStats();
+                }); 
+            }
+            
+            var mapFunction = function(){
+                
+            };
+            
+            //> db.alcoholdb.aggregate([{$group : {_id : {County: "$COUNTY", CategoryName : "$CATEGORY NAME"}, total:{$sum: "$TOTAL"}}},{ $sort : { "_id.County": 1, total: -1} }])
+            
+            function generateStats(){
+                
+            }
+        </script>
+    </body>
+</html>

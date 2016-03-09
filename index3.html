@@ -1,13 +1,24 @@
 <!doctype html>
 <html>
-<header>
+<head>
     <script>
         window.$ = window.jQuery = require('./scripts/jquery-1.12.1.js');
     </script>
     <script src="Chart.js-master/Chart.js-master/Chart.js"></script>
-</header>
+</head>
 
 <body>
+        <ul>
+        <li>
+            <a href="index2.html">Største profit</a>   
+        </li>
+        <li>
+            <a href="index3.html">Tequila salg</a>   
+        </li>
+        <li>
+            <a href="index4.html">Kategorifordeling for butik</a>
+        </li>
+    </ul>
 <canvas id="myChart" width="1200" height="800"></canvas>
 </body>
 <script>
@@ -32,10 +43,12 @@ function getMongoclient(){
     }); 
 }
 
+
+
 function getTopten(){
     console.log("get top ten");   
     db.collection("alcoholdb").aggregate([
-        {$match:{"CATEGORY NAME": "TEQUILA"}},
+        {$match:{"CATEGORY NAME":"TEQUILA"}},
         {$group:{_id:"$COUNTY",
          tota:{$sum:"$TOTAL"}}},
          //count:{$sum:1}}},

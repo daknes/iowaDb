@@ -1,0 +1,122 @@
+<!doctype>
+<html>
+
+<head>
+    <script>
+        window.$ = window.jQuery = require('./scripts/jquery-1.12.1.js');
+    </script>
+    <script src="Chart.js-master/Chart.js-master/Chart.js"></script>
+</head>
+
+<body>
+        <ul>
+        <li>
+            <a href="index2.html">Største profit</a>   
+        </li>
+        <li>
+            <a href="index3.html">Tequila salg</a>   
+        </li>
+        <li>
+            <a href="index4.html">Kategorifordeling for butik</a>
+        </li>
+    </ul>
+<select id="category" onChange="createChar()"></select>
+<canvas id="myChart" width="800" height="400"></canvas>
+<div id="legend"></div>
+<script>
+    var db;
+    var myBarChart ="";
+      $(function(){
+    console.log("doc ready");
+    getMongoclient();          
+});
+
+function getMongoclient(){
+        var MongoClient = require('mongodb').MongoClient;
+        var url = 'mongodb://localhost:27017/mydb';
+        MongoClient.connect(url, function(err, dbb){
+            console.log("connected");
+        db = dbb;
+        getDistinctNames();
+    }); 
+}
+
+function getDistinctNames(){
+    console.log("creaDrop");
+    var selc = document.getElementById("category");
+    db.collection('alcoholdb').distinct("NAME",(function(err, doc){                  
+       for(var i = 0; i < doc.length; i++){
+        var op = document.createElement("option");
+        if(doc[i]!=""){
+            op.text = doc[i];
+            selc.add(op);
+        }
+    }
+    }));    
+}
+
+
+function createPol(err, result){
+    if(!err){
+        
+        var arr = []; 
+        var sum = 0;                   
+        
+        if(myBarChart["segments"]){
+            var no = myBarChart["segments"].length;
+            for(var i = 0; i < no; i++){
+                myBarChart.removeData(0);
+            }
+        }
+        for(var i = 0; i < no; i++){
+            myBarChart.removeData(0);
+        }
+        
+        for(var i =0; i < result.length;i++){
+            var data = {
+                value: result[i]["Percent"].toFixed(2),
+                color:"#F7464A",
+                highlight: "#FF5A5E",
+                label: result[i]["_id"]
+            };
+            arr.push(data);
+        sum += result[i]["Percent"];
+        }
+        console.log(sum);
+        var ctx = document.getElementById("myChart").getContext("2d");
+        ctx.clearRect(0, 0, 800, 400);
+        myBarChart = new Chart(ctx).Pie(arr);
+        var legendHTML = myBarChart.generateLegend();
+        document.getElementById("legend").innerHTML = legendHTML;
+    }else{
+        console.log(err);
+    }
+}
+
+function createChar(){
+    console.log("charCre")
+     var selc = document.getElementById("category").value;
+     var onePercent;
+        db.collection('alcoholdb').aggregate([
+            {$match:{"NAME":selc}},
+            {$group:{_id:selc, Total:{$sum:"$TOTAL"}  }}
+        ],function(err, result){
+            onePercent = result[0].Total / 100;
+                    
+            db.collection('alcoholdb').aggregate([
+                {$match:{"NAME":selc}},
+                {$group:{_id:"$CATEGORY NAME", Sum:{$sum:"$TOTAL"}}},
+                {$project:{Percent:{$divide: ["$Sum", onePercent]}}}
+            ]).toArray(createPol);
+        });
+
+    
+}
+
+
+
+</script>
+</body>
+
+
+</html>
